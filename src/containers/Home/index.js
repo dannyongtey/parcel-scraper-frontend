@@ -3,10 +3,11 @@ import React, { PureComponent } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import Input from 'components/Input'
-import { setUsername, setDownloadData, loginUser, logoutUser } from 'containers/App/actions'
+import { loginUser, logoutUser } from 'containers/App/actions'
 import { selectUsername, selectAuth } from 'containers/App/selectors'
 import { GoogleLogin } from 'react-google-login';
 import { showSnack } from 'react-redux-snackbar';
+import request from 'utils/request'
 
 
 export class Home extends PureComponent {
@@ -14,25 +15,29 @@ export class Home extends PureComponent {
         history: PropTypes.shape({
             push: PropTypes.func,
         }),
-        onChangeUsername: PropTypes.func,
-        onCommandDownload: PropTypes.func,
     }
 
-    goToLearningPage = () => {
-        const { history } = this.props
-        history.push('/learning')
-    }
-
-    submitRequest = (type) => {
+    submitRequest = async (type) => {
         let rawData = this.state
-        console.log(process)
-        this.props.onCommandDownload({
-            details: {
-                type,
-                details: rawData
-            }
+        await request({
+            type: 'post',
+            url: 'request',
+            options: rawData
         })
-        this.props.history.push('/download')
+        this.props.showSnack('myUniqueId', {
+            label: 'The request has been submitted. Thank you!',
+            timeout: 7000,
+            button: { label: 'NICE!' }
+        });
+        
+        // console.log(process)
+        // this.props.onCommandDownload({
+        //     details: {
+        //         type,
+        //         details: rawData
+        //     }
+        // })
+        // this.props.history.push('/download')
     }
 
     constructor(props) {
@@ -78,7 +83,7 @@ export class Home extends PureComponent {
         return (
             <div className="d-flex flex-column mt-4">
                 <div className="text-center">
-                    <h3>Parcel Track MMU</h3>
+                    <h3>Parcel Track MMU V2</h3>
                     <h5>By <a href="https://github.com/dannyongtey">Danny</a></h5>
                     <p>When I got screwed by a problem I screw the problem back.</p>
                     <br />
@@ -125,13 +130,13 @@ export class Home extends PureComponent {
                     <div
                         style={{ textAlign: 'center' }}>
                         <GoogleLogin
-                            clientId="188675003694-fa6v1n9jo0m9ojnvp5ofaefvi6ub7k7c.apps.googleusercontent.com"
+                            clientId="188675003694-3a98hmr4jkt14dhfkargc1cvo5tkblud.apps.googleusercontent.com"
                             buttonText="Login with MMU Account"
                             onSuccess={this.responseGoogle}
                             onFailure={this.failedResponse}
                             cookiePolicy={'single_host_origin'}
                         />
-                        <p style={{ marginTop: '20px' }}>This application involves downloading MMU's intellectual property. Hence, you need to prove that you are a MMU student.</p>
+                        <p style={{ marginTop: '20px' }}>This application involves the use of MMU's intellectual property. Hence, you need to prove that you are a MMU student.</p>
                     </div>
                 }
             </div>
@@ -139,13 +144,10 @@ export class Home extends PureComponent {
     }
 }
 export const mapStateToProps = state => ({
-    username: selectUsername(state),
     isLoggedIn: Object.keys(selectAuth(state)).length > 0 ? true : false,
     loginData: selectAuth(state),
 })
 export const mapDispatchToProps = dispatch => ({
-    onChangeUsername: value => dispatch(setUsername(value)),
-    onCommandDownload: value => dispatch(setDownloadData(value)),
     showSnack: (id, options) => dispatch(showSnack(id, options)),
     loginUser: value => dispatch(loginUser(value)),
     logout: () => dispatch(logoutUser()),
