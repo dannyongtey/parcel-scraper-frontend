@@ -64,13 +64,26 @@ export class Home extends PureComponent {
                 timeout: 5000,
                 button: { label: 'NICE!' }
             });
+            this.setState({
+                name: '',
+                email: '',
+            })
         } catch (err) {
-            const { error } = err.response.data
-            this.props.showSnack('myErrorId', {
-                label: error,
-                timeout: 3000,
-                button: { label: 'Sorry!' }
-            });
+            if (!err.response) {
+                this.props.showSnack('myErrorId', {
+                    label: 'Server is currently under maintenance.',
+                    timeout: 3000,
+                    button: { label: 'Sorry!' }
+                });
+            } else {
+                const { error } = err.response.data
+                this.props.showSnack('myErrorId', {
+                    label: error,
+                    timeout: 3000,
+                    button: { label: 'Sorry!' }
+                });
+            }
+
         }
     }
 
@@ -148,10 +161,10 @@ export class Home extends PureComponent {
                                     <small>Eg. Jason, Zulkifli, Moinul should be acceptable. The system will look for the best possible match(es).</small>
                                 </p>
                                 <label>Name on Parcel:</label>
-                                <Input placeholder="Jason" onChange={(data) => this.updateField({ data, field: 'name' })} />
+                                <Input placeholder="Jason" value={this.state.name} onChange={(data) => this.updateField({ data, field: 'name' })} />
                                 <div className='mt-3'></div>
                                 <label>Email to Notify:</label>
-                                <Input placeholder="test@example.com" onChange={(data) => this.updateField({ data, field: 'email' })} />
+                                <Input placeholder="test@example.com" value={this.state.email} onChange={(data) => this.updateField({ data, field: 'email' })} />
                                 <button className="mt-3" type="button" onClick={(e) => this.submitRequest()}>
                                     Submit
                                 </button>
