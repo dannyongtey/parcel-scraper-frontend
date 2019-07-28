@@ -19,6 +19,23 @@ export class Home extends PureComponent {
         }),
     }
 
+
+    getParcels = async () => {
+        try {
+            const { data } = await request({
+                type: 'post',
+                url: ''
+            })
+            this.setState({
+                data,
+                filteredData: [...data],
+                hasFetched: true
+            })
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
     getMessagingToken = async () => {
         if (!localStorage.getItem('notification-token')) {
             const token = await askNotificationPermission()
@@ -49,7 +66,7 @@ export class Home extends PureComponent {
                 ]
             });
         })
-        let rawData = this.state
+        let rawData = { email: this.state.email, name: this.state.name }
         try {
             await request({
                 type: 'post',
@@ -92,12 +109,33 @@ export class Home extends PureComponent {
         this.state = {
             name: '',
             email: '',
+            data: [],
+            filteredData: [],
+            hasFetched: false,
+            searchTerm: '',
         }
     }
 
     updateField({ data, field }) {
         this.setState({
             [field]: data
+        })
+    }
+
+    searchName({ data, field }) {
+        this.updateField({ data, field })
+        let filteredData
+        if (!data.trim()) {
+            filteredData = this.state.data
+        } else {
+            filteredData = this.state.data.filter(row => {
+                return row.name.toLowerCase().replace(/\s/g, '').includes(
+                    data.toLowerCase().replace(/\s/g, '')
+                )
+            })
+        }
+        this.setState({
+            filteredData
         })
     }
 
@@ -127,6 +165,7 @@ export class Home extends PureComponent {
     render() {
 
         const { isLoggedIn, loginData } = this.props
+        const { hasFetched, filteredData } = this.state
         return (
             <div className="d-flex flex-column mt-4">
                 <div className="text-center">
@@ -169,6 +208,50 @@ export class Home extends PureComponent {
                                     Submit
                                 </button>
                             </div>
+
+                            <div className='py-5 border text-center justify-content-center col-12 col-lg-8 offset-lg-2'>
+                                <h5>Think your parcel has arrived but didn't get notifications?</h5>
+                                {hasFetched ?
+                                    <div>
+                                        <p>Search for your name below.
+                                        <br />
+                                            <small>Eg. Jason, Zulkifli, Moinul should be acceptable. The system will look for the best possible match(es).</small>
+                                        </p>
+                                        <label>Name on Parcel:</label>
+                                        <Input placeholder="Jason" onChange={(data) => this.searchName({ data, field: 'searchTerm' })} />
+                                        <div class='mt-3'>
+                                            <table class='border' style={{ width: '100%' }}>
+                                                <tr class='border'>
+                                                    <th>Name</th>
+                                                    <th>Parcel</th>
+                                                    <th>Quantity</th>
+                                                    <th>Posted On</th>
+                                                </tr>
+                                                {
+                                                    filteredData.map(row => {
+                                                        return (
+                                                            <tr class='border'>
+                                                                <td>{row.name}</td>
+                                                                <td>{row.parcel}</td>
+                                                                <td>{row.qty}</td>
+                                                                <td>{new Date(row.date).getDate()} / {new Date(row.date).getMonth() + 1} / {new Date(row.date).getFullYear()}
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })
+                                                }
+
+                                            </table>
+                                        </div>
+                                    </div>
+                                    :
+                                    <button className="mt-3" type="button" onClick={(e) => this.getParcels()}>
+                                        Search Manually
+                                    </button>
+                                }
+
+                            </div>
+
                         </div>
                         :
                         <div></div>
