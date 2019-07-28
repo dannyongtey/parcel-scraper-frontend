@@ -4,10 +4,12 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import Input from 'components/Input'
 import { loginUser, logoutUser } from 'containers/App/actions'
-import { selectUsername, selectAuth } from 'containers/App/selectors'
+import { selectAuth } from 'containers/App/selectors'
 import { GoogleLogin } from 'react-google-login';
 import { showSnack } from 'react-redux-snackbar';
 import request from 'utils/request'
+import { confirmAlert } from 'react-confirm-alert';
+import { askNotificationPermission } from 'utils/push-notifications'
 
 
 export class Home extends PureComponent {
@@ -17,13 +19,45 @@ export class Home extends PureComponent {
         }),
     }
 
+    getMessagingToken = async () => {
+        if (!localStorage.getItem('notification-token')) {
+            const token = await askNotificationPermission()
+            return token
+        } else {
+            return localStorage.getItem('notification-token')
+        }
+    }
+
     submitRequest = async (type) => {
+        let token = ''
+        await new Promise((resolve, _) => {
+            confirmAlert({
+                title: 'Enable push notification?',
+                message: 'This browser supports push notifications, do you want to enable it to receive notifications on your browser when your parcel has arrived? Note it does not affect the email messaging function.',
+                buttons: [
+                    {
+                        label: 'Yes',
+                        onClick: async () => {
+                            token = await this.getMessagingToken()
+                            resolve()
+                        }
+                    },
+                    {
+                        label: 'No',
+                        onClick: () => { resolve() }
+                    }
+                ]
+            });
+        })
         let rawData = this.state
         try {
             await request({
                 type: 'post',
                 url: 'request',
-                options: rawData
+                options: {
+                    ...rawData,
+                    fcm: token,
+                }
             })
             this.props.showSnack('myUniqueId', {
                 label: 'The request has been submitted. Thank you!',
@@ -38,16 +72,6 @@ export class Home extends PureComponent {
                 button: { label: 'Sorry!' }
             });
         }
-
-
-        // console.log(process)
-        // this.props.onCommandDownload({
-        //     details: {
-        //         type,
-        //         details: rawData
-        //     }
-        // })
-        // this.props.history.push('/download')
     }
 
     constructor(props) {
