@@ -19,17 +19,27 @@ export class Home extends PureComponent {
 
     submitRequest = async (type) => {
         let rawData = this.state
-        await request({
-            type: 'post',
-            url: 'request',
-            options: rawData
-        })
-        this.props.showSnack('myUniqueId', {
-            label: 'The request has been submitted. Thank you!',
-            timeout: 7000,
-            button: { label: 'NICE!' }
-        });
-        
+        try {
+            await request({
+                type: 'post',
+                url: 'request',
+                options: rawData
+            })
+            this.props.showSnack('myUniqueId', {
+                label: 'The request has been submitted. Thank you!',
+                timeout: 5000,
+                button: { label: 'NICE!' }
+            });
+        } catch (err) {
+            const { error } = err.response.data
+            this.props.showSnack('myErrorId', {
+                label: error,
+                timeout: 3000,
+                button: { label: 'Sorry!' }
+            });
+        }
+
+
         // console.log(process)
         // this.props.onCommandDownload({
         //     details: {
@@ -110,7 +120,7 @@ export class Home extends PureComponent {
                             <div className="py-5 border text-center justify-content-center col-12 col-lg-8 offset-lg-2">
                                 <h5>Got a parcel?</h5>
                                 <p>Enter your name on the parcel. Try to be as specific as possible, yet generic as necessary to avoid false or failed detection.
-                                    <br/>
+                                    <br />
                                     <small>Eg. Jason, Zulkifli, Moinul should be acceptable. The system will look for the best possible match(es).</small>
                                 </p>
                                 <label>Name on Parcel:</label>
