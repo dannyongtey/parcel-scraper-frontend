@@ -32,7 +32,20 @@ export class Home extends PureComponent {
                 hasFetched: true
             })
         } catch (err) {
-            console.log(err)
+            if (!err.response) {
+                this.props.showSnack('myErrorId', {
+                    label: 'Server is currently under maintenance.',
+                    timeout: 3000,
+                    button: { label: 'Sorry!' }
+                });
+            } else {
+                const { error } = err.response.data
+                this.props.showSnack('myErrorId', {
+                    label: error,
+                    timeout: 3000,
+                    button: { label: 'Sorry!' }
+                });
+            }
         }
     }
 
